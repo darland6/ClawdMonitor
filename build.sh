@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-APP_NAME="ClawdMonitor"
+APP_NAME="OpenClawWatcher"
 BUILD_DIR="build"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
-echo "🦞 Building ClawdMonitor..."
+echo "🦞 Building OpenClawWatcher..."
 
 # Clean
 rm -rf "$BUILD_DIR"
@@ -20,7 +20,7 @@ swiftc -o "$APP_BUNDLE/Contents/MacOS/$APP_NAME" \
     -framework UserNotifications \
     -framework ServiceManagement \
     -target arm64-apple-macos13.0 \
-    ClawdMonitor.swift
+    OpenClawWatcher.swift
 
 # Copy Info.plist
 cp Info.plist "$APP_BUNDLE/Contents/"

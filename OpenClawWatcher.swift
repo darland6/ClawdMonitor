@@ -5,7 +5,7 @@ import ServiceManagement
 // MARK: - Debug Logging
 #if DEBUG
 func debugLog(_ message: String) {
-    print("[ClawdMonitor] \(message)")
+    print("[OpenClawWatcher] \(message)")
 }
 #else
 func debugLog(_ message: String) {}

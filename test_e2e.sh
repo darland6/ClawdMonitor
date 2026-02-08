@@ -1,12 +1,12 @@
 #!/bin/bash
-# E2E Tests for ClawdMonitor
+# E2E Tests for OpenClawWatcher
 # Tests menu bar app functionality using AppleScript and process checks
 
 set -e
 
-APP_NAME="ClawdMonitor"
-APP_PATH="build/ClawdMonitor.app"
-INSTALLED_PATH="/Applications/ClawdMonitor.app"
+APP_NAME="OpenClawWatcher"
+APP_PATH="build/OpenClawWatcher.app"
+INSTALLED_PATH="/Applications/OpenClawWatcher.app"
 
 # Colors for output
 RED='\033[0;31m'
@@ -31,7 +31,7 @@ warn() {
     echo -e "${YELLOW}⚠ WARN${NC}: $1"
 }
 
-echo "🦞 ClawdMonitor E2E Tests"
+echo "🦞 OpenClawWatcher E2E Tests"
 echo "========================="
 echo ""
 
@@ -97,7 +97,7 @@ echo ""
 echo "Test 6: Menu bar presence"
 MENU_CHECK=$(osascript -e '
 tell application "System Events"
-    tell process "ClawdMonitor"
+    tell process "OpenClawWatcher"
         try
             set menuExists to exists menu bar 1
             return menuExists as string
@@ -162,7 +162,7 @@ echo ""
 echo "Test 11: Menu accessibility"
 MENU_ITEMS=$(osascript -e '
 tell application "System Events"
-    tell process "ClawdMonitor"
+    tell process "OpenClawWatcher"
         try
             set menuBar to menu bar item 1 of menu bar 2
             click menuBar

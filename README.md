@@ -1,4 +1,4 @@
-# ClawdMonitor
+# OpenClawWatcher
 
 A native macOS menu bar app to monitor and manage [OpenClaw](https://openclaw.ai) gateway processes.
 
@@ -27,10 +27,10 @@ A native macOS menu bar app to monitor and manage [OpenClaw](https://openclaw.ai
 ### Build from Source
 
 ```bash
-git clone https://github.com/yourusername/ClawdMonitor.git
-cd ClawdMonitor
+git clone https://github.com/yourusername/OpenClawWatcher.git
+cd OpenClawWatcher
 ./build.sh
-cp -r build/ClawdMonitor.app /Applications/
+cp -r build/OpenClawWatcher.app /Applications/
 ```
 
 ### Requirements
@@ -41,7 +41,7 @@ cp -r build/ClawdMonitor.app /Applications/
 
 ## Usage
 
-1. Launch ClawdMonitor from `/Applications`
+1. Launch OpenClawWatcher from `/Applications`
 2. Look for the 🦞 or 💀 icon in your menu bar
 3. Click to access controls:
    - **Start Gateway** (`⌘S`)
@@ -54,7 +54,7 @@ cp -r build/ClawdMonitor.app /Applications/
 
 ## Configuration
 
-ClawdMonitor reads the OpenClaw configuration from `~/.openclaw/openclaw.json` to:
+OpenClawWatcher reads the OpenClaw configuration from `~/.openclaw/openclaw.json` to:
 - Get the gateway authentication token for dashboard access
 - Determine the gateway port (default: 18789)
 
@@ -79,7 +79,7 @@ chmod +x build.sh
 # Build the app
 ./build.sh
 
-# Output: build/ClawdMonitor.app
+# Output: build/OpenClawWatcher.app
 ```
 
 ## Contributing

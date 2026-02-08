@@ -1,13 +1,13 @@
 # Security Audit Report
 
-**Application:** ClawdMonitor
+**Application:** OpenClawWatcher
 **Version:** 1.0
 **Audit Date:** February 2026
 **Auditor:** Claude Code
 
 ## Summary
 
-ClawdMonitor is a macOS menu bar application that monitors and controls OpenClaw gateway processes. This audit reviewed the application for security vulnerabilities.
+OpenClawWatcher is a macOS menu bar application that monitors and controls OpenClaw gateway processes. This audit reviewed the application for security vulnerabilities.
 
 **Overall Risk Level:** LOW
 
@@ -128,7 +128,7 @@ To verify the security of your installation:
 ls -la ~/.openclaw/openclaw.json
 
 # Verify binary is signed
-codesign -dv /Applications/ClawdMonitor.app
+codesign -dv /Applications/OpenClawWatcher.app
 ```
 
 ## Reporting Issues
