@@ -58,6 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         menu.addItem(NSMenuItem(title: "Start Gateway", action: #selector(startGateway), keyEquivalent: "s"))
         menu.addItem(NSMenuItem(title: "Stop Gateway", action: #selector(stopGateway), keyEquivalent: "x"))
         menu.addItem(NSMenuItem(title: "Restart Gateway", action: #selector(restartGateway), keyEquivalent: "r"))
+        menu.addItem(NSMenuItem(title: "Kill All OpenClaw", action: #selector(killAllOpenClaw), keyEquivalent: "k"))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -165,7 +166,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Direct process execution - no shell needed
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
-        task.arguments = ["-f", "openclaw gateway"]
+        task.arguments = ["-f", "openclaw-gateway"]
 
         do {
             try task.run()
@@ -184,6 +185,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         stopGateway()
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.startGateway()
+        }
+    }
+
+    @objc func killAllOpenClaw() {
+        // Kill all openclaw processes (gateway, agents, channels, etc.)
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+        task.arguments = ["-9", "-f", "openclaw"]
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+            debugLog("Killed all OpenClaw processes")
+            sendNotification(running: false)
+        } catch {
+            debugLog("Error killing OpenClaw: \(error.localizedDescription)")
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            self?.checkStatus()
         }
     }
 
