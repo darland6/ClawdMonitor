@@ -62,6 +62,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         menu.addItem(NSMenuItem.separator())
 
         menu.addItem(NSMenuItem(title: "Open Dashboard", action: #selector(openDashboard), keyEquivalent: "d"))
+        menu.addItem(NSMenuItem(title: "Open Gateway (no auth)", action: #selector(openGateway), keyEquivalent: "g"))
         menu.addItem(NSMenuItem(title: "View Logs", action: #selector(viewLogs), keyEquivalent: "l"))
 
         menu.addItem(NSMenuItem.separator())
@@ -196,6 +197,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Fragments are not sent in HTTP requests or logged in server logs
         let urlString = "http://127.0.0.1:18789/#token=\(token)"
         if let url = URL(string: urlString) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    @objc func openGateway() {
+        if let url = URL(string: "http://127.0.0.1:18789") {
             NSWorkspace.shared.open(url)
         }
     }
