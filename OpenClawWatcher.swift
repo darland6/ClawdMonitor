@@ -13,6 +13,12 @@ func debugLog(_ message: String) {}
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    static func main() {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.run()
+    }
     var statusItem: NSStatusItem!
     var timer: Timer?
     var lastStatus: Bool = false
@@ -55,20 +61,40 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         menu.addItem(NSMenuItem.separator())
 
-        menu.addItem(NSMenuItem(title: "Start Gateway", action: #selector(startGateway), keyEquivalent: "s"))
-        menu.addItem(NSMenuItem(title: "Stop Gateway", action: #selector(stopGateway), keyEquivalent: "x"))
-        menu.addItem(NSMenuItem(title: "Restart Gateway", action: #selector(restartGateway), keyEquivalent: "r"))
-        menu.addItem(NSMenuItem(title: "Kill All OpenClaw", action: #selector(killAllOpenClaw), keyEquivalent: "k"))
+        let startItem = NSMenuItem(title: "Start Gateway", action: #selector(startGateway), keyEquivalent: "s")
+        startItem.target = self
+        menu.addItem(startItem)
+
+        let stopItem = NSMenuItem(title: "Stop Gateway", action: #selector(stopGateway), keyEquivalent: "x")
+        stopItem.target = self
+        menu.addItem(stopItem)
+
+        let restartItem = NSMenuItem(title: "Restart Gateway", action: #selector(restartGateway), keyEquivalent: "r")
+        restartItem.target = self
+        menu.addItem(restartItem)
+
+        let killItem = NSMenuItem(title: "Kill All OpenClaw", action: #selector(killAllOpenClaw), keyEquivalent: "k")
+        killItem.target = self
+        menu.addItem(killItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        menu.addItem(NSMenuItem(title: "Open Dashboard", action: #selector(openDashboard), keyEquivalent: "d"))
-        menu.addItem(NSMenuItem(title: "Open Gateway (no auth)", action: #selector(openGateway), keyEquivalent: "g"))
-        menu.addItem(NSMenuItem(title: "View Logs", action: #selector(viewLogs), keyEquivalent: "l"))
+        let dashboardItem = NSMenuItem(title: "Open Dashboard", action: #selector(openDashboard), keyEquivalent: "d")
+        dashboardItem.target = self
+        menu.addItem(dashboardItem)
+
+        let gatewayItem = NSMenuItem(title: "Open Gateway (no auth)", action: #selector(openGateway), keyEquivalent: "g")
+        gatewayItem.target = self
+        menu.addItem(gatewayItem)
+
+        let logsItem = NSMenuItem(title: "View Logs", action: #selector(viewLogs), keyEquivalent: "l")
+        logsItem.target = self
+        menu.addItem(logsItem)
 
         menu.addItem(NSMenuItem.separator())
 
         let launchItem = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launchItem.target = self
         launchItem.tag = 200
         launchItem.state = isLaunchAtLoginEnabled() ? .on : .off
         menu.addItem(launchItem)
@@ -117,7 +143,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     func isOpenClawRunning() -> Bool {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
-        task.arguments = ["-f", "openclaw gateway"]
+        task.arguments = ["-f", "openclaw-gateway"]
 
         let pipe = Pipe()
         task.standardOutput = pipe
@@ -146,9 +172,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     @objc func startGateway() {
         // Using shell here is necessary for nohup and background execution
         // All arguments are hardcoded - no user input
+        // PATH must be set explicitly since GUI apps don't inherit shell PATH
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        task.arguments = ["-c", "nohup /opt/homebrew/bin/openclaw gateway > /tmp/openclaw-gateway.log 2>&1 &"]
+        task.arguments = ["-c", "export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH && nohup /opt/homebrew/bin/openclaw gateway > /tmp/openclaw-gateway.log 2>&1 &"]
 
         do {
             try task.run()
@@ -345,3 +372,4 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         completionHandler([.banner, .sound])
     }
 }
+

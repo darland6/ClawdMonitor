@@ -16,6 +16,7 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 echo "Compiling Swift..."
 swiftc -o "$APP_BUNDLE/Contents/MacOS/$APP_NAME" \
     -parse-as-library \
+    -D DEBUG \
     -framework Cocoa \
     -framework UserNotifications \
     -framework ServiceManagement \
