@@ -460,14 +460,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         customHeader.isEnabled = false
         modelSubmenu.addItem(customHeader)
 
-        // Show last used model name if available
+        // Show last used model and address if available
         let lastModelName = getLastCustomModelName()
+        let lastAddress = getLastCustomAddress() ?? lmStudioBaseUrl
         let customTitle = lastModelName != nil
-            ? "  LM Studio: \(lastModelName!) (\(lmStudioBaseUrl))"
-            : "  LM Studio (\(lmStudioBaseUrl))..."
+            ? "  \(lastModelName!) @ \(lastAddress)"
+            : "  Custom LM Studio..."
         let customItem = NSMenuItem(title: customTitle, action: #selector(selectCustomModel(_:)), keyEquivalent: "")
         customItem.target = self
-        customItem.representedObject = "lmstudio/\(lastModelName ?? "custom")"
+        customItem.representedObject = lastModelName != nil ? "lmstudio/\(lastModelName!)@\(lastAddress)" : "lmstudio:custom"
 
         // Check if current model is a custom LM Studio model
         if let currentModel = currentModel, currentModel.hasPrefix("lmstudio/") || currentModel == "lmstudio:custom" {
@@ -484,13 +485,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     func getModelDisplayName(fullId: String, availableModels: [ModelInfo]) -> String {
-        // Check if it's a custom LM Studio model
+        // Check if it's a custom LM Studio model (format: lmstudio/model@address)
         if fullId.hasPrefix("lmstudio/") {
-            let modelName = String(fullId.dropFirst("lmstudio/".count))
-            return "LM Studio: \(modelName)"
+            let remainder = String(fullId.dropFirst("lmstudio/".count))
+            if remainder.contains("@") {
+                let parts = remainder.split(separator: "@", maxSplits: 1)
+                if parts.count == 2 {
+                    return "\(parts[0]) @ \(parts[1])"
+                }
+            }
+            return "LM Studio: \(remainder)"
         }
         if fullId == "lmstudio:custom" {
-            return "LM Studio (Custom)"
+            return "Custom LM Studio"
         }
 
         // Find in available models
@@ -526,42 +533,74 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
-            // Create alert with text input for model name
+            // Create alert with text inputs for address and model name
             let alert = NSAlert()
             alert.messageText = "Custom LM Studio Model"
-            alert.informativeText = "Enter the model name for \(self.lmStudioBaseUrl):\n\n(e.g., llama-3.2-8b, qwen2.5-coder, mistral-7b)"
+            alert.informativeText = "Enter the server address and model name:"
             alert.alertStyle = .informational
             alert.addButton(withTitle: "Set Model")
             alert.addButton(withTitle: "Cancel")
 
-            // Create text field for model name input
-            let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-            textField.placeholderString = "model-name"
-            textField.stringValue = self.getLastCustomModelName() ?? ""
-            alert.accessoryView = textField
+            // Create container view for two labeled fields
+            let containerView = NSView(frame: NSRect(x: 0, y: 0, width: 320, height: 70))
 
-            // Make text field first responder
-            alert.window.initialFirstResponder = textField
+            // Address label and field
+            let addressLabel = NSTextField(labelWithString: "Address:")
+            addressLabel.frame = NSRect(x: 0, y: 46, width: 60, height: 17)
+            containerView.addSubview(addressLabel)
+
+            let addressField = NSTextField(frame: NSRect(x: 65, y: 44, width: 255, height: 24))
+            addressField.placeholderString = "192.168.50.10:1234"
+            addressField.stringValue = self.getLastCustomAddress() ?? self.lmStudioBaseUrl
+            containerView.addSubview(addressField)
+
+            // Model label and field
+            let modelLabel = NSTextField(labelWithString: "Model:")
+            modelLabel.frame = NSRect(x: 0, y: 10, width: 60, height: 17)
+            containerView.addSubview(modelLabel)
+
+            let modelField = NSTextField(frame: NSRect(x: 65, y: 8, width: 255, height: 24))
+            modelField.placeholderString = "llama-3.2-8b, qwen2.5-coder, etc."
+            modelField.stringValue = self.getLastCustomModelName() ?? ""
+            containerView.addSubview(modelField)
+
+            alert.accessoryView = containerView
+            alert.window.initialFirstResponder = addressField
 
             let response = alert.runModal()
             if response == .alertFirstButtonReturn {
-                let modelName = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                let address = addressField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                let modelName = modelField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                guard !address.isEmpty else {
+                    self.sendErrorNotification("Address cannot be empty")
+                    return
+                }
                 guard !modelName.isEmpty else {
                     self.sendErrorNotification("Model name cannot be empty")
                     return
                 }
 
-                // Save the custom model name for next time
+                // Save for next time
+                self.saveLastCustomAddress(address)
                 self.saveLastCustomModelName(modelName)
 
-                // Set the model as lmstudio/modelname
-                let fullModelId = "lmstudio/\(modelName)"
+                // Set the model as lmstudio/modelname@address
+                let fullModelId = "lmstudio/\(modelName)@\(address)"
                 self.setActiveModel(fullModelId)
                 self.updateModelMenu()
 
-                self.promptGatewayRestart(modelName: "LM Studio: \(modelName)")
+                self.promptGatewayRestart(modelName: "\(modelName) @ \(address)")
             }
         }
+    }
+
+    func getLastCustomAddress() -> String? {
+        return UserDefaults.standard.string(forKey: "lastCustomAddress")
+    }
+
+    func saveLastCustomAddress(_ address: String) {
+        UserDefaults.standard.set(address, forKey: "lastCustomAddress")
     }
 
     func getLastCustomModelName() -> String? {
