@@ -642,30 +642,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             return
         }
 
-        // Use openclaw CLI to set the model
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        task.arguments = ["-c", "export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH && /opt/homebrew/bin/openclaw config set agents.defaults.model.primary '\(modelId)'"]
-
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
+        // Write directly to config file instead of using CLI (more reliable from GUI)
+        let configPath = NSString(string: "~/.openclaw/openclaw.json").expandingTildeInPath
 
         do {
-            try task.run()
-            task.waitUntilExit()
-
-            if task.terminationStatus == 0 {
-                debugLog("Model set to: \(modelId)")
-            } else {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: data, encoding: .utf8) ?? "Unknown error"
-                debugLog("Failed to set model: \(output)")
-                sendErrorNotification("Failed to set model")
+            let data = try Data(contentsOf: URL(fileURLWithPath: configPath))
+            guard var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                debugLog("Failed to parse config as JSON")
+                sendErrorNotification("Failed to parse config")
+                return
             }
+
+            // Navigate to agents.defaults.model.primary and set it
+            var agents = json["agents"] as? [String: Any] ?? [:]
+            var defaults = agents["defaults"] as? [String: Any] ?? [:]
+            var model = defaults["model"] as? [String: Any] ?? [:]
+
+            model["primary"] = modelId
+            defaults["model"] = model
+            agents["defaults"] = defaults
+            json["agents"] = agents
+
+            // Write back to file
+            let updatedData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+            try updatedData.write(to: URL(fileURLWithPath: configPath))
+
+            debugLog("Model set to: \(modelId)")
+
         } catch {
             debugLog("Error setting model: \(error.localizedDescription)")
-            sendErrorNotification("Error setting model")
+            sendErrorNotification("Failed to set model: \(error.localizedDescription)")
         }
     }
 
