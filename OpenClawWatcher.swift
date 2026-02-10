@@ -647,18 +647,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             return
         }
 
-        // Use shell with jq to modify config (most reliable from GUI app)
-        let configPath = "~/.openclaw/openclaw.json"
-        let tempPath = "/tmp/openclaw-config-temp.json"
-
-        // Escape the model ID for shell
-        let escapedModelId = modelId.replacingOccurrences(of: "'", with: "'\\''")
-
-        let command = "/usr/bin/jq --arg model '\(escapedModelId)' '.agents.defaults.model.primary = $model' \(configPath) > \(tempPath) && mv \(tempPath) \(configPath)"
+        // Call external script to set model (avoids shell escaping issues)
+        let scriptPath = NSString(string: "~/.openclaw/scripts/set-model.sh").expandingTildeInPath
 
         let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        task.arguments = ["-c", command]
+        task.executableURL = URL(fileURLWithPath: scriptPath)
+        task.arguments = [modelId]
 
         let errorPipe = Pipe()
         task.standardError = errorPipe
